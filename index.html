@@ -2,63 +2,63 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Teka-Teki Hewan 🦁</title>
+<title>🐾 Teka-Teki Hewan 🐾</title>
 
 <style>
-body {
-  font-family: "Comic Sans MS", Arial, sans-serif;
-  background: linear-gradient(135deg, #ffeb3b, #ff9800);
-  text-align: center;
-  padding: 20px;
+body{
+  font-family:"Comic Sans MS", Arial, sans-serif;
+  background:linear-gradient(135deg,#ffe066,#ffb703);
+  text-align:center;
+  padding:20px;
 }
 
-h1 { color: #4e342e; }
+h1{color:#5a3e1b;}
 
-input {
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  width: 200px;
+input{
+  padding:10px;
+  border-radius:12px;
+  border:none;
+  width:220px;
 }
 
-.level button, #mulaiBtn {
-  padding: 12px 22px;
-  margin: 6px;
-  border-radius: 25px;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  background: #4caf50;
-  color: white;
+button{
+  padding:12px 22px;
+  margin:6px;
+  border-radius:25px;
+  border:none;
+  font-size:16px;
+  cursor:pointer;
+  background:#4caf50;
+  color:white;
 }
 
-.game-box {
-  background: white;
-  padding: 20px;
-  border-radius: 25px;
-  max-width: 450px;
-  margin: auto;
+button:hover{background:#388e3c;}
+
+.game-box{
+  background:white;
+  padding:20px;
+  border-radius:25px;
+  max-width:460px;
+  margin:20px auto;
+  box-shadow:0 5px 15px rgba(0,0,0,.2);
 }
 
-#jawaban button {
-  display: block;
-  margin: 8px auto;
-  padding: 12px;
-  width: 90%;
-  border-radius: 20px;
-  border: none;
-  background: #03a9f4;
-  color: white;
+#jawaban button{
+  display:block;
+  width:90%;
+  margin:10px auto;
+  background:#03a9f4;
 }
 
-#timer {
-  color: red;
-  font-weight: bold;
+#jawaban button:hover{background:#0288d1;}
+
+#timer{
+  color:red;
+  font-weight:bold;
+  font-size:18px;
 }
 
-#hasil {
-  display: none;
-}
+#hasil{display:none;}
 </style>
 </head>
 
@@ -66,12 +66,11 @@ input {
 
 <h1>🦁 Teka-Teki Hewan 🐯</h1>
 
-<input type="text" id="nama" placeholder="Masukkan nama pemain">
+<input id="nama" placeholder="Nama pemain">
 <br><br>
+<button onclick="mulaiGame()">Mulai Game 🎮</button>
 
-<button id="mulaiBtn" onclick="mulaiGame()">Mulai Game 🎮</button>
-
-<div class="level" id="levelMenu" style="display:none;">
+<div id="levelMenu" style="display:none;">
   <button onclick="setLevel('mudah')">Mudah</button>
   <button onclick="setLevel('sedang')">Sedang</button>
   <button onclick="setLevel('sulit')">Sulit</button>
@@ -80,124 +79,128 @@ input {
 <p id="timer"></p>
 
 <div class="game-box">
-  <h2 id="soal">Pilih level</h2>
+  <h2 id="soal">Silakan mulai game</h2>
   <div id="jawaban"></div>
 </div>
 
 <div class="game-box" id="hasil">
-  <h2>🎉 Hasil Permainan</h2>
+  <h2>🎉 Hasil Akhir</h2>
   <p id="hasilNama"></p>
   <p id="hasilSkor"></p>
   <p id="hasilBintang"></p>
 </div>
 
-<audio id="benar" src="audio/benar.mp3"></audio>
-<audio id="salah" src="audio/salah.mp3"></audio>
+<audio id="audioBenar" src="audio/benar.mp3"></audio>
+<audio id="audioSalah" src="audio/salah.mp3"></audio>
 <audio id="musik" src="audio/musik.mp3" loop></audio>
 
 <script>
-const soal = {
-  mudah: [
-    {q:"🐱 Hewan yang mengeong?", a:["Kucing","Anjing","Sapi"], k:"Kucing"},
-    {q:"🐶 Hewan penjaga rumah?", a:["Ayam","Anjing","Ikan"], k:"Anjing"},
-    {q:"🐔 Menghasilkan telur?", a:["Kucing","Ayam","Sapi"], k:"Ayam"},
-    {q:"🐟 Hidup di air?", a:["Ikan","Kuda","Kucing"], k:"Ikan"},
-    {q:"🐄 Menghasilkan susu?", a:["Sapi","Ayam","Kucing"], k:"Sapi"}
+// ===== DATA SOAL =====
+const bankSoal = {
+  mudah:[
+    {q:"🐱 Hewan yang mengeong?",a:["Kucing","Anjing","Sapi"],k:"Kucing"},
+    {q:"🐔 Menghasilkan telur?",a:["Ayam","Kucing","Sapi"],k:"Ayam"},
+    {q:"🐟 Hidup di air?",a:["Ikan","Kuda","Ayam"],k:"Ikan"},
+    {q:"🐶 Penjaga rumah?",a:["Anjing","Kucing","Ayam"],k:"Anjing"},
+    {q:"🐄 Menghasilkan susu?",a:["Sapi","Kambing","Ayam"],k:"Sapi"}
   ],
-  sedang: [
-    {q:"🐘 Hewan darat terbesar?", a:["Gajah","Badak","Kuda"], k:"Gajah"},
-    {q:"🦌 Hewan bertanduk?", a:["Rusa","Kucing","Ayam"], k:"Rusa"},
-    {q:"🐍 Cara bergerak ular?", a:["Melompat","Merayap","Terbang"], k:"Merayap"},
-    {q:"🦅 Hewan pemangsa?", a:["Elang","Ayam","Bebek"], k:"Elang"},
-    {q:"🐒 Hewan pintar?", a:["Monyet","Sapi","Kambing"], k:"Monyet"}
+  sedang:[
+    {q:"🐘 Hewan darat terbesar?",a:["Gajah","Kuda","Sapi"],k:"Gajah"},
+    {q:"🐍 Cara bergerak ular?",a:["Merayap","Melompat","Berlari"],k:"Merayap"},
+    {q:"🦅 Hewan pemangsa?",a:["Elang","Ayam","Bebek"],k:"Elang"},
+    {q:"🐒 Hewan cerdas?",a:["Monyet","Kambing","Sapi"],k:"Monyet"},
+    {q:"🦌 Hewan bertanduk?",a:["Rusa","Kucing","Ayam"],k:"Rusa"}
   ],
-  sulit: [
-    {q:"🦒 Hewan dengan leher terpanjang?", a:["Jerapah","Unta","Kuda"], k:"Jerapah"},
-    {q:"🦉 Hewan aktif di malam hari?", a:["Burung Hantu","Ayam","Elang"], k:"Burung Hantu"},
-    {q:"🐬 Hewan laut paling cerdas?", a:["Lumba-lumba","Ikan","Paus"], k:"Lumba-lumba"},
-    {q:"🦂 Hewan berbisa dengan capit?", a:["Kalajengking","Kepiting","Laba-laba"], k:"Kalajengking"},
-    {q:"🐫 Hewan bertahan di gurun?", a:["Unta","Kuda","Sapi"], k:"Unta"}
+  sulit:[
+    {q:"🦉 Hewan aktif di malam hari?",a:["Burung Hantu","Ayam","Elang"],k:"Burung Hantu"},
+    {q:"🐬 Hewan laut paling cerdas?",a:["Lumba-lumba","Paus","Ikan"],k:"Lumba-lumba"},
+    {q:"🦂 Hewan bercapit berbisa?",a:["Kalajengking","Kepiting","Laba-laba"],k:"Kalajengking"},
+    {q:"🐫 Hewan bertahan di gurun?",a:["Unta","Kuda","Sapi"],k:"Unta"},
+    {q:"🦒 Leher terpanjang?",a:["Jerapah","Unta","Kuda"],k:"Jerapah"}
   ]
 };
 
-let level, index = 0, skor = 0, timer, waktu = 10, dataSoal = [];
-const benar = document.getElementById("benar");
-const salah = document.getElementById("salah");
+// ===== VARIABEL =====
+let level, soalIndex, skor, data, timer, waktu;
+const soalEl = document.getElementById("soal");
+const jawabanEl = document.getElementById("jawaban");
+const timerEl = document.getElementById("timer");
+
+const audioBenar = document.getElementById("audioBenar");
+const audioSalah = document.getElementById("audioSalah");
 const musik = document.getElementById("musik");
 
-document.body.addEventListener("click", () => musik.play(), {once:true});
+document.body.addEventListener("click",()=>musik.play(),{once:true});
 
+// ===== FUNGSI =====
 function mulaiGame(){
   if(!nama.value) return alert("Masukkan nama dulu!");
-  document.getElementById("levelMenu").style.display = "block";
+  levelMenu.style.display="block";
 }
 
 function setLevel(lv){
-  level = lv;
-  index = 0;
-  skor = 0;
-  dataSoal = [...soal[lv]].sort(() => Math.random()-0.5);
+  level=lv;
+  soalIndex=0;
+  skor=0;
+  data=[...bankSoal[lv]].sort(()=>Math.random()-0.5);
   tampilSoal();
 }
 
 function tampilSoal(){
   clearInterval(timer);
-  if(index >= 5){
+  timerEl.innerText="";
+
+  if(soalIndex>=5){
     tampilHasil();
     return;
   }
 
-  const s = dataSoal[index];
-  soal.innerText = s.q;
-  jawaban.innerHTML = "";
+  const s=data[soalIndex];
+  soalEl.innerText=`Soal ${soalIndex+1}/5\n${s.q}`;
+  jawabanEl.innerHTML="";
 
-  s.a.sort(() => Math.random()-0.5).forEach(j=>{
-    let b = document.createElement("button");
-    b.innerText = j;
-    b.onclick = ()=>cek(j,s.k);
-    jawaban.appendChild(b);
+  s.a.sort(()=>Math.random()-0.5).forEach(j=>{
+    const btn=document.createElement("button");
+    btn.innerText=j;
+    btn.onclick=()=>cekJawaban(j,s.k);
+    jawabanEl.appendChild(btn);
   });
 
-  if(level === "sulit"){
-    waktu = 10;
-    timer = setInterval(()=>{
-      timerText.innerText = "⏱ "+waktu;
+  if(level==="sulit"){
+    waktu=10;
+    timer=setInterval(()=>{
+      timerEl.innerText="⏱ "+waktu+" detik";
       waktu--;
-      if(waktu < 0){
+      if(waktu<0){
         clearInterval(timer);
-        salah.play();
-        index++;
+        audioSalah.play();
+        soalIndex++;
         tampilSoal();
       }
     },1000);
-  } else {
-    timerText.innerText = "";
   }
 }
 
-function cek(pilih, kunci){
+function cekJawaban(pilih,kunci){
   clearInterval(timer);
-  if(pilih === kunci){
-    benar.play();
-    skor += 20;
-  } else {
-    salah.play();
+  if(pilih===kunci){
+    audioBenar.play();
+    skor+=20;
+  }else{
+    audioSalah.play();
   }
-  index++;
+  soalIndex++;
   tampilSoal();
 }
 
 function tampilHasil(){
-  hasil.style.display = "block";
-  hasilNama.innerText = "Nama: " + nama.value;
-  hasilSkor.innerText = "Skor: " + skor;
-
-  let bintang = skor > 80 ? "⭐⭐⭐" : skor > 40 ? "⭐⭐" : "⭐";
-  hasilBintang.innerText = "Bintang: " + bintang;
+  hasil.style.display="block";
+  hasilNama.innerText="Nama: "+nama.value;
+  hasilSkor.innerText="Skor: "+skor;
+  hasilBintang.innerText=
+    skor>80?"⭐⭐⭐":skor>40?"⭐⭐":"⭐";
 }
 </script>
 
 </body>
 </html>
-
-
