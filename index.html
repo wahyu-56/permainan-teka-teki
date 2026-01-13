@@ -2,178 +2,204 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>🐾 Teka-Teki Hewan 🐾</title>
+<title>🕵️ Teka-Teki Hewan</title>
 
 <style>
 body{
+  margin:0;
   font-family:"Comic Sans MS", Arial, sans-serif;
   background:linear-gradient(135deg,#ffe066,#ffb703);
   text-align:center;
-  padding:20px;
 }
 
-h1{color:#5a3e1b;}
+.page{
+  min-height:100vh;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  animation:fade .5s ease;
+}
 
-input{
-  padding:10px;
-  border-radius:12px;
-  border:none;
-  width:220px;
+.page.active{display:flex;}
+
+@keyframes fade{
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.box{
+  background:white;
+  padding:25px;
+  border-radius:25px;
+  width:90%;
+  max-width:460px;
+  box-shadow:0 6px 15px rgba(0,0,0,.2);
 }
 
 button{
-  padding:12px 22px;
+  padding:12px 24px;
   margin:6px;
   border-radius:25px;
   border:none;
-  font-size:16px;
-  cursor:pointer;
   background:#4caf50;
   color:white;
+  font-size:16px;
+  cursor:pointer;
 }
 
 button:hover{background:#388e3c;}
 
-.game-box{
-  background:white;
-  padding:20px;
-  border-radius:25px;
-  max-width:460px;
-  margin:20px auto;
-  box-shadow:0 5px 15px rgba(0,0,0,.2);
+input{
+  padding:12px;
+  border-radius:15px;
+  border:none;
+  width:80%;
 }
 
 #jawaban button{
   display:block;
-  width:90%;
-  margin:10px auto;
+  width:100%;
   background:#03a9f4;
+  margin:10px 0;
 }
 
 #jawaban button:hover{background:#0288d1;}
 
-#timer{
-  color:red;
-  font-weight:bold;
-  font-size:18px;
-}
-
-#hasil{display:none;}
+#timer{color:red;font-weight:bold;}
+#nyawa{font-size:22px;}
 </style>
 </head>
 
 <body>
 
-<h1>🦁 Teka-Teki Hewan 🐯</h1>
-
-<input id="nama" placeholder="Nama pemain">
-<br><br>
-<button onclick="mulaiGame()">Mulai Game 🎮</button>
-
-<div id="levelMenu" style="display:none;">
-  <button onclick="setLevel('mudah')">Mudah</button>
-  <button onclick="setLevel('sedang')">Sedang</button>
-  <button onclick="setLevel('sulit')">Sulit</button>
+<!-- ===== MENU ===== -->
+<div class="page active" id="menu">
+  <div class="box">
+    <h1>🦁 Teka-Teki Hewan 🐯</h1>
+    <p>Masukkan nama <b>Detektif</b> 🕵️</p>
+    <input id="nama" placeholder="Detektif ...">
+    <br><br>
+    <button onclick="keGame()">Mulai Game 🎮</button>
+  </div>
 </div>
 
-<p id="timer"></p>
+<!-- ===== GAME ===== -->
+<div class="page" id="game">
+  <div class="box">
+    <h2 id="judulLevel">Pilih Level</h2>
+    <div id="levelBtn">
+      <button onclick="setLevel('mudah')">Mudah</button>
+      <button onclick="setLevel('sedang')">Sedang</button>
+      <button onclick="setLevel('sulit')">Sulit</button>
+    </div>
 
-<div class="game-box">
-  <h2 id="soal">Silakan mulai game</h2>
-  <div id="jawaban"></div>
+    <p id="nyawa">❤️❤️❤️</p>
+    <p id="timer"></p>
+
+    <h3 id="soal"></h3>
+    <div id="jawaban"></div>
+  </div>
 </div>
 
-<div class="game-box" id="hasil">
-  <h2>🎉 Hasil Akhir</h2>
-  <p id="hasilNama"></p>
-  <p id="hasilSkor"></p>
-  <p id="hasilBintang"></p>
+<!-- ===== HASIL ===== -->
+<div class="page" id="hasil">
+  <div class="box">
+    <h2>🏁 Hasil Akhir</h2>
+    <p id="hasilNama"></p>
+    <p id="hasilSkor"></p>
+    <p id="hasilBintang"></p>
+    <button onclick="location.reload()">Main Lagi 🔁</button>
+  </div>
 </div>
 
-<audio id="audioBenar" src="audio/benar.mp3"></audio>
-<audio id="audioSalah" src="audio/salah.mp3"></audio>
-<audio id="musik" src="audio/musik.mp3" loop></audio>
+<!-- AUDIO PUBLIK -->
+<audio id="benar" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3"></audio>
+<audio id="salah" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+<audio id="musik" src="https://assets.mixkit.co/music/preview/mixkit-fun-kids-playground-407.mp3" loop></audio>
 
 <script>
 // ===== DATA SOAL =====
-const bankSoal = {
+const bank = {
   mudah:[
-    {q:"🐱 Hewan yang mengeong?",a:["Kucing","Anjing","Sapi"],k:"Kucing"},
-    {q:"🐔 Menghasilkan telur?",a:["Ayam","Kucing","Sapi"],k:"Ayam"},
+    {q:"🐱 Hewan mengeong?",a:["Kucing","Anjing","Sapi"],k:"Kucing"},
+    {q:"🐔 Bertelur?",a:["Ayam","Kucing","Sapi"],k:"Ayam"},
     {q:"🐟 Hidup di air?",a:["Ikan","Kuda","Ayam"],k:"Ikan"},
     {q:"🐶 Penjaga rumah?",a:["Anjing","Kucing","Ayam"],k:"Anjing"},
-    {q:"🐄 Menghasilkan susu?",a:["Sapi","Kambing","Ayam"],k:"Sapi"}
+    {q:"🐄 Menghasilkan susu?",a:["Sapi","Ayam","Kucing"],k:"Sapi"}
   ],
   sedang:[
-    {q:"🐘 Hewan darat terbesar?",a:["Gajah","Kuda","Sapi"],k:"Gajah"},
+    {q:"🐘 Terbesar di darat?",a:["Gajah","Kuda","Sapi"],k:"Gajah"},
     {q:"🐍 Cara bergerak ular?",a:["Merayap","Melompat","Berlari"],k:"Merayap"},
     {q:"🦅 Hewan pemangsa?",a:["Elang","Ayam","Bebek"],k:"Elang"},
-    {q:"🐒 Hewan cerdas?",a:["Monyet","Kambing","Sapi"],k:"Monyet"},
-    {q:"🦌 Hewan bertanduk?",a:["Rusa","Kucing","Ayam"],k:"Rusa"}
+    {q:"🐒 Hewan cerdas?",a:["Monyet","Sapi","Kambing"],k:"Monyet"},
+    {q:"🦌 Bertanduk?",a:["Rusa","Kucing","Ayam"],k:"Rusa"}
   ],
   sulit:[
-    {q:"🦉 Hewan aktif di malam hari?",a:["Burung Hantu","Ayam","Elang"],k:"Burung Hantu"},
-    {q:"🐬 Hewan laut paling cerdas?",a:["Lumba-lumba","Paus","Ikan"],k:"Lumba-lumba"},
+    {q:"🦉 Aktif malam hari?",a:["Burung Hantu","Ayam","Elang"],k:"Burung Hantu"},
+    {q:"🐬 Hewan laut cerdas?",a:["Lumba-lumba","Ikan","Paus"],k:"Lumba-lumba"},
     {q:"🦂 Hewan bercapit berbisa?",a:["Kalajengking","Kepiting","Laba-laba"],k:"Kalajengking"},
-    {q:"🐫 Hewan bertahan di gurun?",a:["Unta","Kuda","Sapi"],k:"Unta"},
+    {q:"🐫 Tahan hidup di gurun?",a:["Unta","Kuda","Sapi"],k:"Unta"},
     {q:"🦒 Leher terpanjang?",a:["Jerapah","Unta","Kuda"],k:"Jerapah"}
   ]
 };
 
 // ===== VARIABEL =====
-let level, soalIndex, skor, data, timer, waktu;
-const soalEl = document.getElementById("soal");
-const jawabanEl = document.getElementById("jawaban");
-const timerEl = document.getElementById("timer");
-
-const audioBenar = document.getElementById("audioBenar");
-const audioSalah = document.getElementById("audioSalah");
+let level, soalIndex, skor, nyawa, waktu, timer, data;
 const musik = document.getElementById("musik");
-
 document.body.addEventListener("click",()=>musik.play(),{once:true});
 
-// ===== FUNGSI =====
-function mulaiGame(){
-  if(!nama.value) return alert("Masukkan nama dulu!");
-  levelMenu.style.display="block";
+// ===== NAVIGASI =====
+function show(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
+function keGame(){
+  if(!nama.value) return alert("Masukkan nama Detektif dulu!");
+  show("game");
+}
+
+// ===== GAME LOGIC =====
 function setLevel(lv){
   level=lv;
   soalIndex=0;
   skor=0;
-  data=[...bankSoal[lv]].sort(()=>Math.random()-0.5);
+  nyawa=3;
+  data=[...bank[lv]].sort(()=>Math.random()-0.5);
+  judulLevel.innerText="Level: "+lv.toUpperCase();
   tampilSoal();
 }
 
 function tampilSoal(){
   clearInterval(timer);
-  timerEl.innerText="";
+  timer.innerText="";
+  nyawaEl();
 
-  if(soalIndex>=5){
+  if(soalIndex>=5 || nyawa<=0){
     tampilHasil();
     return;
   }
 
   const s=data[soalIndex];
-  soalEl.innerText=`Soal ${soalIndex+1}/5\n${s.q}`;
-  jawabanEl.innerHTML="";
+  soal.innerText=`Soal ${soalIndex+1}/5\n${s.q}`;
+  jawaban.innerHTML="";
 
   s.a.sort(()=>Math.random()-0.5).forEach(j=>{
-    const btn=document.createElement("button");
-    btn.innerText=j;
-    btn.onclick=()=>cekJawaban(j,s.k);
-    jawabanEl.appendChild(btn);
+    const b=document.createElement("button");
+    b.innerText=j;
+    b.onclick=()=>cek(j,s.k);
+    jawaban.appendChild(b);
   });
 
   if(level==="sulit"){
     waktu=10;
     timer=setInterval(()=>{
-      timerEl.innerText="⏱ "+waktu+" detik";
+      timer.innerText="⏱ "+waktu+" detik";
       waktu--;
       if(waktu<0){
-        clearInterval(timer);
-        audioSalah.play();
+        document.getElementById("salah").play();
+        nyawa--;
         soalIndex++;
         tampilSoal();
       }
@@ -181,24 +207,30 @@ function tampilSoal(){
   }
 }
 
-function cekJawaban(pilih,kunci){
+function cek(pilih,kunci){
   clearInterval(timer);
   if(pilih===kunci){
-    audioBenar.play();
+    document.getElementById("benar").play();
     skor+=20;
   }else{
-    audioSalah.play();
+    document.getElementById("salah").play();
+    nyawa--;
   }
   soalIndex++;
   tampilSoal();
 }
 
+function nyawaEl(){
+  document.getElementById("nyawa").innerText="❤️".repeat(nyawa);
+}
+
+// ===== HASIL =====
 function tampilHasil(){
-  hasil.style.display="block";
-  hasilNama.innerText="Nama: "+nama.value;
+  show("hasil");
+  hasilNama.innerText="Detektif: "+nama.value;
   hasilSkor.innerText="Skor: "+skor;
   hasilBintang.innerText=
-    skor>80?"⭐⭐⭐":skor>40?"⭐⭐":"⭐";
+    skor>80?"⭐⭐⭐ Hebat!":skor>40?"⭐⭐ Bagus!":"⭐ Ayo coba lagi!";
 }
 </script>
 
