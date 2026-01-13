@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detektif Hewan: Tantangan Waktu</title>
+    <style>
+        :root {
+            --mudah: #4caf50; --sedang: #ff9800; --sulit: #f44336;
+        }
+        body {
+            font-family: 'Arial Rounded MT Bold', sans-serif;
+            background: linear-gradient(135deg, #a8e0ff 0%, #def2ff 100%);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0;
+        }
+        .card {
+            background: white; padding: 25px; border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 90%; max-width: 500px; text-align: center;
+        }
+        .btn-lvl {
+            padding: 15px 25px; margin: 10px; border: none; border-radius: 15px;
+            color: white; font-weight: bold; cursor: pointer; font-size: 1rem;
+            transition: 0.3s;
+        }
+        .btn-mudah { background: var(--mudah); }
+        .btn-sedang { background: var(--sedang); }
+        .btn-sulit { background: var(--sulit); }
+        
+        #gameArea { display: none; }
+        
+        .animal-img {
+            width: 100%; height: 200px; object-fit: cover;
+            border-radius: 20px; margin-bottom: 15px;
+            border: 5px solid #eee;
+        }
+        
+        .timer-bar {
+            width: 100%; height: 10px; background: #eee;
+            border-radius: 5px; margin: 15px 0; overflow: hidden;
+        }
+        #timerFill {
+            height: 100%; width: 100%; background: var(--mudah);
+            transition: width 1s linear;
+        }
+        
+        input {
+            width: 80%; padding: 12px; border-radius: 10px;
+            border: 2px solid #ddd; margin-bottom: 10px; font-size: 1rem;
+        }
+        .hint { font-weight: bold; font-size: 1.1rem; color: #444; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="menu">
+        <h1>🐾 Detektif Hewan</h1>
+        <p>Pilih level petualanganmu:</p>
+        <button class="btn-lvl btn-mudah" onclick="start(0)">MUDAH<br>(20 dtk)</button>
+        <button class="btn-lvl btn-sedang" onclick="start(1)">SEDANG<br>(15 dtk)</button>
+        <button class="btn-lvl btn-sulit" onclick="start(2)">SULIT<br>(10 dtk)</button>
+    </div>
+
+    <div id="gameArea">
+        <h2 id="lvlName">Level</h2>
+        <div class="timer-bar"><div id="timerFill"></div></div>
+        <img id="animalImg" class="animal-img" src="" alt="Gambar Hewan">
+        <div class="hint" id="hint">Siap?</div>
+        <input type="text" id="ansInput" placeholder="Jawabanmu..." autocomplete="off">
+        <br>
+        <button class="btn-lvl btn-mudah" onclick="check()">Kirim Jawaban</button>
+        <p id="msg"></p>
+        <div id="stats">Skor: 0 | Soal: 1/3</div>
+    </div>
+</div>
+
+<script>
+    const config = [
+        { name: "MUDAH", time: 20, color: "#4caf50", 
+          data: [
+            { q: "Aku melompat, punya kantong, dan tinggal di Australia.", a: "kanguru", img: "https://images.unsplash.com/photo-1549240923-93a2e080e653?w=500" },
+            { q: "Aku hewan yang sangat lambat dan suka makan selada.", a: "kura-kura", img: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=500" }
+          ]},
+        { name: "SEDANG", time: 15, color: "#ff9800",
+          data: [
+            { q: "Aku punya leher sangat panjang untuk makan daun di atas pohon.", a: "jerapah", img: "https://images.unsplash.com/photo-1547721064-36202634a1be?w=500" },
+            { q: "Badanku besar, punya belalai, dan takut tikus.", a: "gajah", img: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=500" }
+          ]},
+        { name: "SULIT", time: 10, color: "#f44336",
+          data: [
+            { q: "Aku burung kutub yang tidak bisa terbang tapi jago berenang.", a: "penguin", img: "https://images.unsplash.com/photo-1517783999520-f068d7431a60?w=500" },
+            { q: "Aku adalah karnivora bergaris hitam-oranye yang jago berenang.", a: "harimau", img: "https://images.unsplash.com/photo-1508061461508-cb18c242f556?w=500" }
+          ]}
+    ];
+
+    let currentLvlIdx, currentQIdx, score, timeLeft, timerInterval;
+
+    function start(idx) {
+        currentLvlIdx = idx;
+        currentQIdx = 0;
+        score = 0;
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('gameArea').style.display = 'block';
+        document.getElementById('lvlName').innerText = "LEVEL " + config[idx].name;
+        document.getElementById('timerFill').style.backgroundColor = config[idx].color;
+        loadQ();
+    }
+
+    function loadQ() {
+        const q = config[currentLvlIdx].data[currentQIdx];
+        document.getElementById('hint').innerText = q.q;
+        document.getElementById('animalImg').src = q.img;
+        document.getElementById('ansInput').value = "";
+        document.getElementById('msg').innerText = "";
+        document.getElementById('stats').innerText = `Skor: ${score} | Soal: ${currentQIdx + 1}/${config[currentLvlIdx].data.length}`;
+        
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = config[currentLvlIdx].time;
+        updateTimerBar();
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerBar();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('msg').innerText = "⏰ Waktu Habis!";
+                document.getElementById('msg').style.color = "red";
+                setTimeout(next, 2000);
+            }
+        }, 1000);
+    }
+
+    function updateTimerBar() {
+        const percent = (timeLeft / config[currentLvlIdx].time) * 100;
+        document.getElementById('timerFill').style.width = percent + "%";
+    }
+
+    function check() {
+        const ans = document.getElementById('ansInput').value.toLowerCase().trim();
+        if (ans === config[currentLvlIdx].data[currentQIdx].a) {
+            clearInterval(timerInterval);
+            score += 10;
+            document.getElementById('msg').innerText = "🎉 Benar!";
+            document.getElementById('msg').style.color = "green";
+            setTimeout(next, 1500);
+        } else {
+            document.getElementById('msg').innerText = "❌ Salah, coba lagi!";
+            document.getElementById('msg').style.color = "red";
+        }
+    }
+
+    function next() {
+        currentQIdx++;
+        if (currentQIdx < config[currentLvlIdx].data.length) {
+            loadQ();
+        } else {
+            alert("Permainan Selesai! Skor Akhir: " + score);
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
