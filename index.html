@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Teka-Teki Hewan 🐶</title>
+<title>Teka-Teki Hewan 🦁</title>
 
 <style>
 body {
@@ -12,11 +12,16 @@ body {
   padding: 20px;
 }
 
-h1 {
-  color: #4e342e;
+h1 { color: #4e342e; }
+
+input {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  width: 200px;
 }
 
-.level button {
+.level button, #mulaiBtn {
   padding: 12px 22px;
   margin: 6px;
   border-radius: 25px;
@@ -27,40 +32,32 @@ h1 {
   color: white;
 }
 
-.level button:hover {
-  background: #388e3c;
-}
-
 .game-box {
   background: white;
   padding: 20px;
   border-radius: 25px;
-  max-width: 420px;
+  max-width: 450px;
   margin: auto;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 #jawaban button {
   display: block;
-  margin: 10px auto;
+  margin: 8px auto;
   padding: 12px;
-  width: 85%;
+  width: 90%;
   border-radius: 20px;
   border: none;
   background: #03a9f4;
   color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#jawaban button:hover {
-  background: #0288d1;
 }
 
 #timer {
-  font-size: 18px;
-  font-weight: bold;
   color: red;
+  font-weight: bold;
+}
+
+#hasil {
+  display: none;
 }
 </style>
 </head>
@@ -69,7 +66,12 @@ h1 {
 
 <h1>🦁 Teka-Teki Hewan 🐯</h1>
 
-<div class="level">
+<input type="text" id="nama" placeholder="Masukkan nama pemain">
+<br><br>
+
+<button id="mulaiBtn" onclick="mulaiGame()">Mulai Game 🎮</button>
+
+<div class="level" id="levelMenu" style="display:none;">
   <button onclick="setLevel('mudah')">Mudah</button>
   <button onclick="setLevel('sedang')">Sedang</button>
   <button onclick="setLevel('sulit')">Sulit</button>
@@ -78,90 +80,123 @@ h1 {
 <p id="timer"></p>
 
 <div class="game-box">
-  <h2 id="soal">Pilih level dulu 🎮</h2>
+  <h2 id="soal">Pilih level</h2>
   <div id="jawaban"></div>
 </div>
 
-<!-- AUDIO -->
-<audio id="audioBenar" src="audio/benar.mp3"></audio>
-<audio id="audioSalah" src="audio/salah.mp3"></audio>
+<div class="game-box" id="hasil">
+  <h2>🎉 Hasil Permainan</h2>
+  <p id="hasilNama"></p>
+  <p id="hasilSkor"></p>
+  <p id="hasilBintang"></p>
+</div>
+
+<audio id="benar" src="audio/benar.mp3"></audio>
+<audio id="salah" src="audio/salah.mp3"></audio>
 <audio id="musik" src="audio/musik.mp3" loop></audio>
 
 <script>
-const soalHewan = {
-  mudah: {
-    soal: "🐱 Hewan apa yang suka mengeong?",
-    pilihan: ["Anjing", "Kucing", "Sapi"],
-    jawaban: "Kucing"
-  },
-  sedang: {
-    soal: "🐘 Hewan terbesar di darat?",
-    pilihan: ["Gajah", "Kuda", "Kambing"],
-    jawaban: "Gajah"
-  },
-  sulit: {
-    soal: "🦒 Hewan apa yang memiliki leher panjang?",
-    pilihan: ["Jerapah", "Zebra", "Singa"],
-    jawaban: "Jerapah"
-  }
+const soal = {
+  mudah: [
+    {q:" Hewan yang mengeong?", a:["Kucing","Anjing","Sapi"], k:"Kucing"},
+    {q:" Hewan penjaga rumah?", a:["Ayam","Anjing","Ikan"], k:"Anjing"},
+    {q:" Menghasilkan telur?", a:["Kucing","Ayam","Sapi"], k:"Ayam"},
+    {q:" Hidup di air?", a:["Ikan","Kuda","Kucing"], k:"Ikan"},
+    {q:" Menghasilkan susu?", a:["Sapi","Ayam","Kucing"], k:"Sapi"}
+  ],
+  sedang: [
+    {q:" Hewan darat terbesar?", a:["Gajah","Badak","Kuda"], k:"Gajah"},
+    {q:" Hewan bertanduk?", a:["Rusa","Kucing","Ayam"], k:"Rusa"},
+    {q:" Cara bergerak ular?", a:["Melompat","Merayap","Terbang"], k:"Merayap"},
+    {q:" Hewan pemangsa?", a:["Elang","Ayam","Bebek"], k:"Elang"},
+    {q:" Hewan pintar?", a:["Monyet","Sapi","Kambing"], k:"Monyet"}
+  ],
+  sulit: [
+    {q:" Hewan dengan leher terpanjang?", a:["Jerapah","Unta","Kuda"], k:"Jerapah"},
+    {q:" Hewan aktif di malam hari?", a:["Burung Hantu","Ayam","Elang"], k:"Burung Hantu"},
+    {q:" Hewan laut paling cerdas?", a:["Lumba-lumba","Ikan","Paus"], k:"Lumba-lumba"},
+    {q:" Hewan berbisa dengan capit?", a:["Kalajengking","Kepiting","Laba-laba"], k:"Kalajengking"},
+    {q:" Hewan bertahan di gurun?", a:["Unta","Kuda","Sapi"], k:"Unta"}
+  ]
 };
 
-let timer;
-let waktu = 10;
-
-const audioBenar = document.getElementById("audioBenar");
-const audioSalah = document.getElementById("audioSalah");
+let level, index = 0, skor = 0, timer, waktu = 10, dataSoal = [];
+const benar = document.getElementById("benar");
+const salah = document.getElementById("salah");
 const musik = document.getElementById("musik");
 
-musik.volume = 0.3;
+document.body.addEventListener("click", () => musik.play(), {once:true});
 
-// autoplay aman (klik pertama user)
-document.body.addEventListener("click", () => {
-  musik.play();
-}, { once: true });
+function mulaiGame(){
+  if(!nama.value) return alert("Masukkan nama dulu!");
+  document.getElementById("levelMenu").style.display = "block";
+}
 
-function setLevel(level) {
+function setLevel(lv){
+  level = lv;
+  index = 0;
+  skor = 0;
+  dataSoal = [...soal[lv]].sort(() => Math.random()-0.5);
+  tampilSoal();
+}
+
+function tampilSoal(){
   clearInterval(timer);
-  document.getElementById("timer").innerText = "";
+  if(index >= 5){
+    tampilHasil();
+    return;
+  }
 
-  const data = soalHewan[level];
-  document.getElementById("soal").innerText = data.soal;
+  const s = dataSoal[index];
+  soal.innerText = s.q;
+  jawaban.innerHTML = "";
 
-  const jawabanDiv = document.getElementById("jawaban");
-  jawabanDiv.innerHTML = "";
-
-  data.pilihan.forEach(pil => {
-    const btn = document.createElement("button");
-    btn.innerText = pil;
-    btn.onclick = () => cekJawaban(pil, data.jawaban);
-    jawabanDiv.appendChild(btn);
+  s.a.sort(() => Math.random()-0.5).forEach(j=>{
+    let b = document.createElement("button");
+    b.innerText = j;
+    b.onclick = ()=>cek(j,s.k);
+    jawaban.appendChild(b);
   });
 
-  if (level === "sulit") {
+  if(level === "sulit"){
     waktu = 10;
-    timer = setInterval(() => {
-      document.getElementById("timer").innerText = "⏱ Waktu: " + waktu;
+    timer = setInterval(()=>{
+      timerText.innerText = "⏱ "+waktu;
       waktu--;
-
-      if (waktu < 0) {
+      if(waktu < 0){
         clearInterval(timer);
-        audioSalah.play();
-        alert("⏰ Waktu habis!");
+        salah.play();
+        index++;
+        tampilSoal();
       }
-    }, 1000);
+    },1000);
+  } else {
+    timerText.innerText = "";
   }
 }
 
-function cekJawaban(pilih, benar) {
-  if (pilih === benar) {
-    audioBenar.play();
-    alert("🎉 Benar!");
+function cek(pilih, kunci){
+  clearInterval(timer);
+  if(pilih === kunci){
+    benar.play();
+    skor += 20;
   } else {
-    audioSalah.play();
-    alert("❌ Salah!");
+    salah.play();
   }
+  index++;
+  tampilSoal();
+}
+
+function tampilHasil(){
+  hasil.style.display = "block";
+  hasilNama.innerText = "Nama: " + nama.value;
+  hasilSkor.innerText = "Skor: " + skor;
+
+  let bintang = skor > 80 ? "⭐⭐⭐" : skor > 40 ? "⭐⭐" : "⭐";
+  hasilBintang.innerText = "Bintang: " + bintang;
 }
 </script>
 
 </body>
 </html>
+
