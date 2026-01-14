@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Teka-Teki Hewan Anak</title>
+<title>Teka-Teki Hewan</title>
 
 <style>
 *{
@@ -12,8 +12,8 @@
 
 body{
   margin:0;
-  background:linear-gradient(135deg,#FFD93D,#FF9F1C);
   min-height:100vh;
+  background:linear-gradient(135deg,#FFD93D,#FF9F1C);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -22,19 +22,19 @@ body{
 .hidden{display:none}
 
 .box{
-  background:#fff;
+  background:white;
   width:90%;
   max-width:500px;
   padding:25px;
   border-radius:25px;
   text-align:center;
   box-shadow:0 10px 30px rgba(0,0,0,.2);
-  animation:fade .5s;
+  animation:fade .4s;
 }
 
 @keyframes fade{
-  from{opacity:0; transform:scale(.9)}
-  to{opacity:1; transform:scale(1)}
+  from{opacity:0;transform:scale(.9)}
+  to{opacity:1;transform:scale(1)}
 }
 
 h1,h2{margin:10px 0}
@@ -63,9 +63,6 @@ button:hover{opacity:.9}
 
 .level button{background:#2196F3}
 
-#nyawa{font-size:22px}
-#timer{color:red;font-weight:bold}
-
 .jawaban button{
   display:block;
   width:100%;
@@ -73,10 +70,8 @@ button:hover{opacity:.9}
   background:#03A9F4;
 }
 
-img{
-  width:150px;
-  margin:10px auto;
-}
+#nyawa{font-size:22px}
+#timer{color:red;font-weight:bold}
 
 .star{font-size:30px;color:gold}
 </style>
@@ -91,8 +86,8 @@ img{
 
 <!-- HALAMAN NAMA -->
 <div class="box" id="halNama">
-  <h1>🦁 Teka-Teki Hewan 🐯</h1>
-  <p>Masukkan nama detektifmu</p>
+  <h1>🐾 Teka-Teki Hewan 🐾</h1>
+  <p>Masukkan nama detektif</p>
   <input id="namaInput" placeholder="Nama Detektif">
   <br><br>
   <button onclick="mulai()">Mulai 🎮</button>
@@ -115,7 +110,6 @@ img{
   <h2 id="judulLevel"></h2>
   <div id="nyawa"></div>
   <div id="timer"></div>
-  <img id="gambar">
   <h3 id="soal"></h3>
   <div class="jawaban" id="jawaban"></div>
 </div>
@@ -130,43 +124,43 @@ img{
 </div>
 
 <script>
-let nama="", level="", data=[], index=0, skor=0, nyawa=3, waktu=0, timerInt;
-let musik=false;
+let nama="", level="", data=[], index=0, skor=0, nyawa=3;
+let waktu=0, timerInt, musik=false;
 
 const bank={
 mudah:[
-{q:"Hewan apa yang berkata 'meong'?",a:["Kucing","Anjing","Sapi"],k:"Kucing",img:"https://i.imgur.com/JlUvsxa.png"},
-{q:"Hewan bertelinga panjang?",a:["Kelinci","Gajah","Kuda"],k:"Kelinci",img:"https://i.imgur.com/sjH9y4B.png"},
-{q:"Hewan yang bisa terbang?",a:["Burung","Kucing","Ikan"],k:"Burung",img:"https://i.imgur.com/j6w5Z4E.png"},
-{q:"Hewan berkaki empat dan menggonggong?",a:["Anjing","Ayam","Ular"],k:"Anjing",img:"https://i.imgur.com/6cM1pYF.png"},
-{q:"Hewan hidup di air?",a:["Ikan","Kambing","Sapi"],k:"Ikan",img:"https://i.imgur.com/3dXyVvF.png"}
+{q:"Hewan yang berkata 'meong'?",a:["Kucing","Anjing","Sapi"],k:"Kucing"},
+{q:"Hewan bertelinga panjang?",a:["Kelinci","Kuda","Gajah"],k:"Kelinci"},
+{q:"Hewan yang bisa terbang?",a:["Burung","Kucing","Ikan"],k:"Burung"},
+{q:"Hewan hidup di air?",a:["Ikan","Ayam","Kambing"],k:"Ikan"},
+{q:"Hewan yang menggonggong?",a:["Anjing","Kucing","Sapi"],k:"Anjing"}
 ],
 sedang:[
-{q:"Hewan terbesar di darat?",a:["Gajah","Singa","Kuda"],k:"Gajah",img:"https://i.imgur.com/4AiXzf8.png"},
-{q:"Hewan yang berubah warna?",a:["Bunglon","Ular","Ayam"],k:"Bunglon",img:"https://i.imgur.com/Xlq8Z5R.png"},
-{q:"Hewan melompat dan berkantung?",a:["Kanguru","Kucing","Beruang"],k:"Kanguru",img:"https://i.imgur.com/5h6R8bU.png"},
-{q:"Raja hutan?",a:["Singa","Serigala","Macan"],k:"Singa",img:"https://i.imgur.com/4vZ7M4A.png"},
-{q:"Hewan bercangkang?",a:["Kura-kura","Ular","Kelinci"],k:"Kura-kura",img:"https://i.imgur.com/tx0mFtb.png"}
+{q:"Hewan terbesar di darat?",a:["Gajah","Kuda","Singa"],k:"Gajah"},
+{q:"Raja hutan?",a:["Singa","Macan","Serigala"],k:"Singa"},
+{q:"Hewan yang berubah warna?",a:["Bunglon","Ular","Ayam"],k:"Bunglon"},
+{q:"Hewan bercangkang?",a:["Kura-kura","Kelinci","Ular"],k:"Kura-kura"},
+{q:"Hewan melompat dan berkantung?",a:["Kanguru","Kuda","Beruang"],k:"Kanguru"}
 ],
 sulit:[
-{q:"Mamalia laut terbesar?",a:["Paus Biru","Lumba-lumba","Hiu"],k:"Paus Biru",img:"https://i.imgur.com/Wy6aJ3E.png"},
-{q:"Hewan aktif malam hari?",a:["Kelelawar","Ayam","Kambing"],k:"Kelelawar",img:"https://i.imgur.com/1R8k7P8.png"},
-{q:"Hewan bertelur dan menyusui?",a:["Platipus","Penyu","Buaya"],k:"Platipus",img:"https://i.imgur.com/7T1PLiX.png"},
-{q:"Hewan tercepat di darat?",a:["Cheetah","Kuda","Singa"],k:"Cheetah",img:"https://i.imgur.com/y6k5k1p.png"},
-{q:"Hewan beracun dari laut?",a:["Ubur-ubur","Ikan Mas","Paus"],k:"Ubur-ubur",img:"https://i.imgur.com/6n8Xj4Y.png"}
+{q:"Mamalia laut terbesar?",a:["Paus Biru","Lumba-lumba","Hiu"],k:"Paus Biru"},
+{q:"Hewan aktif malam hari?",a:["Kelelawar","Ayam","Sapi"],k:"Kelelawar"},
+{q:"Hewan bertelur dan menyusui?",a:["Platipus","Buaya","Penyu"],k:"Platipus"},
+{q:"Hewan tercepat di darat?",a:["Cheetah","Kuda","Singa"],k:"Cheetah"},
+{q:"Hewan laut beracun?",a:["Ubur-ubur","Ikan Mas","Paus"],k:"Ubur-ubur"}
 ]
 };
 
 function mulai(){
-  nama=namaInput.value||"Detektif Cilik";
+  nama = namaInput.value || "Detektif Cilik";
   halNama.classList.add("hidden");
   halMenu.classList.remove("hidden");
-  halo.innerText="Halo, "+nama+" 👋";
+  halo.innerText = "Halo, " + nama + " 👋";
 }
 
 function toggleMusik(){
   musik=!musik;
-  musik?bgm.play():bgm.pause();
+  musik ? bgm.play() : bgm.pause();
 }
 
 function setLevel(lv){
@@ -184,22 +178,29 @@ function tampilSoal(){
   nyawa.innerText="❤️".repeat(nyawa);
   timer.innerText="";
   if(index>=5||nyawa<=0)return hasil();
+
   const s=data[index];
-  gambar.src=s.img;
   soal.innerText=s.q;
   jawaban.innerHTML="";
+
   s.a.sort(()=>Math.random()-0.5).forEach(j=>{
     let b=document.createElement("button");
     b.innerText=j;
     b.onclick=()=>cek(j,s.k);
     jawaban.appendChild(b);
   });
+
   if(level==="sulit"){
     waktu=10;
     timerInt=setInterval(()=>{
       timer.innerText="⏱ "+waktu+" detik";
       waktu--;
-      if(waktu<0){salah.play();nyawa--;index++;tampilSoal();}
+      if(waktu<0){
+        salah.play();
+        nyawa--;
+        index++;
+        tampilSoal();
+      }
     },1000);
   }
 }
@@ -208,7 +209,8 @@ function cek(j,k){
   clearInterval(timerInt);
   if(j===k){benar.play();skor+=20;}
   else{salah.play();nyawa--;}
-  index++; tampilSoal();
+  index++;
+  tampilSoal();
 }
 
 function hasil(){
@@ -220,6 +222,6 @@ function hasil(){
   bintang.innerHTML="⭐".repeat(star);
 }
 </script>
+
 </body>
 </html>
-
