@@ -6,71 +6,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-    margin: 0;
-    font-family: "Comic Sans MS", Arial, sans-serif;
-    background: linear-gradient(135deg, #ffcc33, #ff9933);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+body{
+    margin:0;
+    font-family:"Comic Sans MS", Arial, sans-serif;
+    background:linear-gradient(135deg,#ffcc33,#ff9933);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
 }
 
-.card {
-    background: white;
-    width: 90%;
-    max-width: 420px;
-    padding: 25px;
-    border-radius: 20px;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    animation: fade 0.5s;
+.card{
+    background:#fff;
+    width:90%;
+    max-width:420px;
+    padding:25px;
+    border-radius:20px;
+    text-align:center;
+    box-shadow:0 10px 25px rgba(0,0,0,0.25);
+    animation:fade .4s;
 }
 
-.hidden { display: none; }
+.hidden{display:none}
 
-h1, h2 {
-    margin-top: 0;
+button{
+    background:#2196f3;
+    color:#fff;
+    border:none;
+    padding:12px 18px;
+    margin:8px;
+    border-radius:12px;
+    font-size:16px;
+    cursor:pointer;
 }
 
-button {
-    background: #2196f3;
-    border: none;
-    color: white;
-    padding: 12px 18px;
-    border-radius: 12px;
-    font-size: 16px;
-    margin: 8px;
-    cursor: pointer;
+button:hover{background:#1976d2}
+
+.choice{
+    display:block;
+    width:100%;
+    margin:8px 0;
 }
 
-button:hover {
-    background: #1976d2;
+.status{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
 }
 
-.choice {
-    display: block;
-    width: 100%;
-    margin: 8px 0;
+input{
+    padding:10px;
+    width:80%;
+    border-radius:10px;
+    border:1px solid #ccc;
+    font-size:16px;
 }
 
-#musicBtn {
-    background: #4caf50;
-}
-
-#musicBtn:hover {
-    background: #388e3c;
-}
-
-.status {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-@keyframes fade {
-    from {opacity:0; transform: scale(0.95);}
-    to {opacity:1; transform: scale(1);}
+@keyframes fade{
+    from{opacity:0; transform:scale(.95)}
+    to{opacity:1; transform:scale(1)}
 }
 </style>
 </head>
@@ -79,9 +73,9 @@ button:hover {
 
 <!-- HALAMAN NAMA -->
 <div class="card" id="namePage">
-    <h1>🕵️‍♂️ Detektif Cilik</h1>
-    <p>Masukkan nama detektifmu</p>
-    <input id="playerName" placeholder="Nama Detektif" style="padding:10px;width:80%;border-radius:10px;">
+    <h1>🎮 Permainan Teka-Teki Hewan</h1>
+    <p>Masukkan Nama Pemain</p>
+    <input id="playerName" placeholder="Nama Pemain">
     <br><br>
     <button onclick="startMenu()">Mulai</button>
 </div>
@@ -93,8 +87,6 @@ button:hover {
     <button onclick="startGame('mudah')">Mudah</button>
     <button onclick="startGame('sedang')">Sedang</button>
     <button onclick="startGame('sulit')">Sulit</button>
-    <br>
-    <button id="musicBtn">🎵 Musik</button>
 </div>
 
 <!-- GAME -->
@@ -109,88 +101,82 @@ button:hover {
 
 <!-- HASIL -->
 <div class="card hidden" id="resultPage">
-    <h1>🎉 Selesai!</h1>
+    <h1>🏁 Hasil Akhir</h1>
     <p id="resultText"></p>
     <p id="stars"></p>
     <button onclick="location.reload()">Main Lagi</button>
 </div>
 
 <script>
-/* ===== AUDIO ===== */
-let bgMusic = null;
-let isMusicPlaying = false;
-
+/* ===== SUARA ===== */
 const correctSound = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7c8f93f02c.mp3");
 const wrongSound   = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_2b7cfc2f9c.mp3");
 
 /* ===== DATA SOAL ===== */
-const questions = {
-    mudah: [
-        {q:"Hewan apa yang mengeong?", a:["Kucing","Anjing","Ayam","Sapi"], c:0},
-        {q:"Hewan yang bisa terbang?", a:["Ikan","Burung","Kucing","Kambing"], c:1},
-        {q:"Hewan yang hidup di air?", a:["Sapi","Ayam","Ikan","Kuda"], c:2},
-        {q:"Hewan berkaki empat?", a:["Ayam","Ular","Sapi","Ikan"], c:2},
-        {q:"Hewan yang menggonggong?", a:["Kucing","Anjing","Burung","Ikan"], c:1}
-    ],
-    sedang: [
-        {q:"Hewan tercepat di darat?", a:["Kuda","Macan","Cheetah","Sapi"], c:2},
-        {q:"Hewan bertaring?", a:["Kambing","Harimau","Ayam","Kelinci"], c:1},
-        {q:"Hewan nokturnal?", a:["Ayam","Burung Hantu","Sapi","Kuda"], c:1},
-        {q:"Hewan pemakan daging?", a:["Singa","Sapi","Kelinci","Kuda"], c:0},
-        {q:"Hewan melata?", a:["Katak","Ular","Kucing","Burung"], c:1}
-    ],
-    sulit: [
-        {q:"Hewan amfibi?", a:["Ular","Katak","Elang","Singa"], c:1},
-        {q:"Hewan herbivora?", a:["Singa","Harimau","Sapi","Serigala"], c:2},
-        {q:"Hewan bertelur & menyusui?", a:["Ayam","Platipus","Ikan","Katak"], c:1},
-        {q:"Hewan dengan echolocation?", a:["Kelelawar","Kuda","Gajah","Kucing"], c:0},
-        {q:"Hewan berdarah dingin?", a:["Ayam","Sapi","Ular","Kucing"], c:2}
-    ]
+const questions={
+mudah:[
+{q:"Hewan apa yang mengeong?",a:["Kucing","Anjing","Ayam","Sapi"],c:0},
+{q:"Hewan yang bisa terbang?",a:["Ikan","Burung","Kucing","Kambing"],c:1},
+{q:"Hewan yang hidup di air?",a:["Sapi","Ayam","Ikan","Kuda"],c:2},
+{q:"Hewan berkaki empat?",a:["Ayam","Ular","Sapi","Ikan"],c:2},
+{q:"Hewan yang menggonggong?",a:["Kucing","Anjing","Burung","Ikan"],c:1}
+],
+sedang:[
+{q:"Hewan tercepat di darat?",a:["Kuda","Macan","Cheetah","Sapi"],c:2},
+{q:"Hewan bertaring?",a:["Kambing","Harimau","Ayam","Kelinci"],c:1},
+{q:"Hewan nokturnal?",a:["Ayam","Burung Hantu","Sapi","Kuda"],c:1},
+{q:"Hewan pemakan daging?",a:["Singa","Sapi","Kelinci","Kuda"],c:0},
+{q:"Hewan melata?",a:["Katak","Ular","Kucing","Burung"],c:1}
+],
+sulit:[
+{q:"Hewan amfibi?",a:["Ular","Katak","Elang","Singa"],c:1},
+{q:"Hewan herbivora?",a:["Singa","Harimau","Sapi","Serigala"],c:2},
+{q:"Hewan bertelur dan menyusui?",a:["Ayam","Platipus","Ikan","Katak"],c:1},
+{q:"Hewan dengan echolocation?",a:["Kelelawar","Kuda","Gajah","Kucing"],c:0},
+{q:"Hewan berdarah dingin?",a:["Ayam","Sapi","Ular","Kucing"],c:2}
+]
 };
 
-let level, index, score, lives, timerInterval, timeLeft, player;
+let level,index,score,lives,player,timerInt,timeLeft;
 
 /* ===== FUNGSI ===== */
-function startMenu() {
-    player = playerName.value || "Detektif";
-    hello.innerText = `Halo, ${player} 👋`;
+function startMenu(){
+    player=playerName.value||"Pemain";
+    hello.innerText=`Halo, ${player} 👋`;
     show(menuPage);
 }
 
-function startGame(lvl) {
-    level = lvl;
-    index = 0;
-    score = 0;
-    lives = 3;
+function startGame(lvl){
+    level=lvl;
+    index=0;
+    score=0;
+    lives=3;
     shuffle(questions[level]);
     show(gamePage);
     loadQuestion();
 }
 
-function loadQuestion() {
-    if (index >= 5 || lives <= 0) return endGame();
-
-    livesDiv();
-    question.innerText = questions[level][index].q;
-    choices.innerHTML = "";
-
-    questions[level][index].a.forEach((text,i)=>{
-        const btn = document.createElement("button");
-        btn.className = "choice";
-        btn.innerText = text;
-        btn.onclick = ()=>answer(i);
-        choices.appendChild(btn);
+function loadQuestion(){
+    if(index>=5||lives<=0){endGame(); return;}
+    updateLives();
+    question.innerText=questions[level][index].q;
+    choices.innerHTML="";
+    questions[level][index].a.forEach((t,i)=>{
+        let b=document.createElement("button");
+        b.className="choice";
+        b.innerText=t;
+        b.onclick=()=>answer(i);
+        choices.appendChild(b);
     });
-
-    if (level === "sulit") startTimer();
+    if(level==="sulit") startTimer();
 }
 
-function answer(i) {
+function answer(i){
     stopTimer();
-    if (i === questions[level][index].c) {
+    if(i===questions[level][index].c){
         correctSound.play();
-        score += 20;
-    } else {
+        score+=20;
+    }else{
         wrongSound.play();
         lives--;
     }
@@ -198,14 +184,14 @@ function answer(i) {
     loadQuestion();
 }
 
-function startTimer() {
-    timeLeft = 10;
-    timer.innerText = `⏱️ ${timeLeft}`;
-    timerInterval = setInterval(()=>{
+function startTimer(){
+    timeLeft=10;
+    timer.innerText="⏱️ "+timeLeft;
+    timerInt=setInterval(()=>{
         timeLeft--;
-        timer.innerText = `⏱️ ${timeLeft}`;
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
+        timer.innerText="⏱️ "+timeLeft;
+        if(timeLeft<=0){
+            clearInterval(timerInt);
             lives--;
             index++;
             loadQuestion();
@@ -213,50 +199,26 @@ function startTimer() {
     },1000);
 }
 
-function stopTimer() {
-    clearInterval(timerInterval);
-    timer.innerText = "";
+function stopTimer(){
+    clearInterval(timerInt);
+    timer.innerText="";
 }
 
-function endGame() {
+function endGame(){
     show(resultPage);
-    let stars = score >= 80 ? "⭐⭐⭐" : score >= 50 ? "⭐⭐" : "⭐";
-    resultText.innerText = `${player}, skor kamu: ${score}`;
-    document.getElementById("stars").innerText = stars;
+    let star=score>=80?"⭐⭐⭐":score>=50?"⭐⭐":"⭐";
+    resultText.innerText=`${player}, skor kamu: ${score}`;
+    stars.innerText=`Bintang: ${star}`;
 }
 
 /* ===== UTIL ===== */
-function show(page) {
-    document.querySelectorAll(".card").forEach(p=>p.classList.add("hidden"));
-    page.classList.remove("hidden");
+function show(p){
+    document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
+    p.classList.remove("hidden");
 }
-
-function shuffle(arr) {
-    arr.sort(()=>Math.random()-0.5);
-}
-
-function livesDiv() {
-    livesEl = "❤️".repeat(lives);
-    document.getElementById("lives").innerText = livesEl;
-}
-
-/* ===== MUSIK FIX ===== */
-musicBtn.onclick = () => {
-    if (!bgMusic) {
-        bgMusic = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_4c9c61e1d7.mp3");
-        bgMusic.loop = true;
-        bgMusic.volume = 0.5;
-    }
-    if (!isMusicPlaying) {
-        bgMusic.play();
-        isMusicPlaying = true;
-        musicBtn.innerText = "⏸️ Matikan Musik";
-    } else {
-        bgMusic.pause();
-        isMusicPlaying = false;
-        musicBtn.innerText = "🎵 Musik";
-    }
-};
+function shuffle(a){a.sort(()=>Math.random()-0.5);}
+function updateLives(){livesDiv.innerText="❤️".repeat(lives);}
+const livesDiv=document.getElementById("lives");
 </script>
 
 </body>
