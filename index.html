@@ -2,185 +2,224 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Detektif Hewan 🐾</title>
+<title>Teka-Teki Hewan Anak</title>
+
 <style>
+*{
+  box-sizing:border-box;
+  font-family:'Comic Sans MS', cursive;
+}
+
 body{
-  font-family: 'Comic Sans MS', cursive;
-  background: linear-gradient(135deg,#ffecd2,#fcb69f);
-  text-align:center;
   margin:0;
+  background:linear-gradient(135deg,#FFD93D,#FF9F1C);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
+
+.hidden{display:none}
+
 .box{
-  background:white;
+  background:#fff;
+  width:90%;
   max-width:500px;
-  margin:50px auto;
-  padding:20px;
-  border-radius:20px;
-  box-shadow:0 10px 20px rgba(0,0,0,.2);
+  padding:25px;
+  border-radius:25px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+  animation:fade .5s;
 }
+
+@keyframes fade{
+  from{opacity:0; transform:scale(.9)}
+  to{opacity:1; transform:scale(1)}
+}
+
+h1,h2{margin:10px 0}
+
+input{
+  width:80%;
+  padding:12px;
+  border-radius:20px;
+  border:2px solid #ccc;
+  text-align:center;
+  font-size:16px;
+}
+
 button{
-  background:#ff9800;
-  color:white;
   border:none;
+  border-radius:20px;
   padding:12px 20px;
   margin:8px;
-  border-radius:15px;
   font-size:16px;
   cursor:pointer;
+  background:#4CAF50;
+  color:white;
 }
-button:hover{background:#f57c00}
-input{
-  padding:10px;
-  width:80%;
-  border-radius:10px;
-  border:1px solid #ccc;
-}
-#jawaban button{
-  display:block;
-  width:100%;
-}
-.hidden{display:none}
+
+button:hover{opacity:.9}
+
+.level button{background:#2196F3}
+
 #nyawa{font-size:22px}
 #timer{color:red;font-weight:bold}
+
+.jawaban button{
+  display:block;
+  width:100%;
+  margin:8px 0;
+  background:#03A9F4;
+}
+
+img{
+  width:150px;
+  margin:10px auto;
+}
+
+.star{font-size:30px;color:gold}
 </style>
 </head>
+
 <body>
 
-<audio id="benar" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-<audio id="salah" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-<audio id="musik" src="https://actions.google.com/sounds/v1/ambiences/barnyard.ogg" loop></audio>
+<!-- AUDIO -->
+<audio id="benar" src="https://cdn.pixabay.com/audio/2022/03/15/audio_7f3b02a8b5.mp3"></audio>
+<audio id="salah" src="https://cdn.pixabay.com/audio/2022/03/15/audio_4c9b5bb0e3.mp3"></audio>
+<audio id="bgm" src="https://cdn.pixabay.com/audio/2022/08/02/audio_9b0c2b45c5.mp3" loop></audio>
 
+<!-- HALAMAN NAMA -->
 <div class="box" id="halNama">
-  <h2>🕵️ Nama Detektif</h2>
-  <input id="nama" placeholder="Masukkan nama detektif">
+  <h1>🦁 Teka-Teki Hewan 🐯</h1>
+  <p>Masukkan nama detektifmu</p>
+  <input id="namaInput" placeholder="Nama Detektif">
   <br><br>
-  <button onclick="mulai()">Mulai</button>
+  <button onclick="mulai()">Mulai 🎮</button>
 </div>
 
-<div class="box hidden" id="halLevel">
-  <h2>Pilih Level</h2>
-  <button onclick="setLevel('mudah')">Mudah</button>
-  <button onclick="setLevel('sedang')">Sedang</button>
-  <button onclick="setLevel('sulit')">Sulit</button>
+<!-- HALAMAN MENU -->
+<div class="box hidden" id="halMenu">
+  <h2 id="halo"></h2>
+  <p>Pilih Level</p>
+  <div class="level">
+    <button onclick="setLevel('mudah')">Mudah</button>
+    <button onclick="setLevel('sedang')">Sedang</button>
+    <button onclick="setLevel('sulit')">Sulit</button>
+  </div>
+  <button onclick="toggleMusik()">🎵 Musik</button>
 </div>
 
+<!-- HALAMAN GAME -->
 <div class="box hidden" id="halGame">
   <h2 id="judulLevel"></h2>
   <div id="nyawa"></div>
   <div id="timer"></div>
+  <img id="gambar">
   <h3 id="soal"></h3>
-  <div id="jawaban"></div>
+  <div class="jawaban" id="jawaban"></div>
 </div>
 
+<!-- HALAMAN HASIL -->
 <div class="box hidden" id="halHasil">
   <h2>🎉 Hasil Akhir</h2>
   <p id="hasilNama"></p>
   <p id="hasilSkor"></p>
-  <p id="hasilBintang"></p>
-  <button onclick="location.reload()">Main Lagi</button>
+  <div id="bintang"></div>
+  <button onclick="location.reload()">Main Lagi 🔁</button>
 </div>
 
 <script>
-let pemain="", level="", skor=0, nyawa=3, index=0, waktu=0, timer;
-const musik=document.getElementById("musik");
+let nama="", level="", data=[], index=0, skor=0, nyawa=3, waktu=0, timerInt;
+let musik=false;
 
 const bank={
-  mudah:[
-    {q:"Hewan apa yang mengatakan 'meong'?",a:["Kucing","Sapi","Ayam"],k:"Kucing"},
-    {q:"Hewan apa yang hidup di air?",a:["Ikan","Kucing","Kambing"],k:"Ikan"},
-    {q:"Hewan berkaki empat dan menggonggong?",a:["Anjing","Ayam","Bebek"],k:"Anjing"},
-    {q:"Hewan penghasil susu?",a:["Sapi","Ikan","Ular"],k:"Sapi"},
-    {q:"Hewan yang bisa terbang?",a:["Burung","Kucing","Kuda"],k:"Burung"}
-  ],
-  sedang:[
-    {q:"Hewan tercepat di darat?",a:["Cheetah","Kuda","Sapi"],k:"Cheetah"},
-    {q:"Hewan besar berbelalai?",a:["Gajah","Badak","Kuda"],k:"Gajah"},
-    {q:"Hewan pemakan bambu?",a:["Panda","Beruang","Kucing"],k:"Panda"},
-    {q:"Hewan malam yang bisa terbang?",a:["Kelelawar","Ayam","Elang"],k:"Kelelawar"},
-    {q:"Hewan bercangkang keras?",a:["Kura-kura","Ular","Kucing"],k:"Kura-kura"}
-  ],
-  sulit:[
-    {q:"Mamalia yang bisa terbang?",a:["Kelelawar","Burung","Ayam"],k:"Kelelawar"},
-    {q:"Hewan amfibi?",a:["Katak","Ular","Ikan"],k:"Katak"},
-    {q:"Hewan terbesar di dunia?",a:["Paus Biru","Gajah","Hiu"],k:"Paus Biru"},
-    {q:"Hewan berdarah dingin?",a:["Reptil","Kucing","Sapi"],k:"Reptil"},
-    {q:"Hewan bertaring berbisa?",a:["Ular","Kambing","Kuda"],k:"Ular"}
-  ]
+mudah:[
+{q:"Hewan apa yang berkata 'meong'?",a:["Kucing","Anjing","Sapi"],k:"Kucing",img:"https://i.imgur.com/JlUvsxa.png"},
+{q:"Hewan bertelinga panjang?",a:["Kelinci","Gajah","Kuda"],k:"Kelinci",img:"https://i.imgur.com/sjH9y4B.png"},
+{q:"Hewan yang bisa terbang?",a:["Burung","Kucing","Ikan"],k:"Burung",img:"https://i.imgur.com/j6w5Z4E.png"},
+{q:"Hewan berkaki empat dan menggonggong?",a:["Anjing","Ayam","Ular"],k:"Anjing",img:"https://i.imgur.com/6cM1pYF.png"},
+{q:"Hewan hidup di air?",a:["Ikan","Kambing","Sapi"],k:"Ikan",img:"https://i.imgur.com/3dXyVvF.png"}
+],
+sedang:[
+{q:"Hewan terbesar di darat?",a:["Gajah","Singa","Kuda"],k:"Gajah",img:"https://i.imgur.com/4AiXzf8.png"},
+{q:"Hewan yang berubah warna?",a:["Bunglon","Ular","Ayam"],k:"Bunglon",img:"https://i.imgur.com/Xlq8Z5R.png"},
+{q:"Hewan melompat dan berkantung?",a:["Kanguru","Kucing","Beruang"],k:"Kanguru",img:"https://i.imgur.com/5h6R8bU.png"},
+{q:"Raja hutan?",a:["Singa","Serigala","Macan"],k:"Singa",img:"https://i.imgur.com/4vZ7M4A.png"},
+{q:"Hewan bercangkang?",a:["Kura-kura","Ular","Kelinci"],k:"Kura-kura",img:"https://i.imgur.com/tx0mFtb.png"}
+],
+sulit:[
+{q:"Mamalia laut terbesar?",a:["Paus Biru","Lumba-lumba","Hiu"],k:"Paus Biru",img:"https://i.imgur.com/Wy6aJ3E.png"},
+{q:"Hewan aktif malam hari?",a:["Kelelawar","Ayam","Kambing"],k:"Kelelawar",img:"https://i.imgur.com/1R8k7P8.png"},
+{q:"Hewan bertelur dan menyusui?",a:["Platipus","Penyu","Buaya"],k:"Platipus",img:"https://i.imgur.com/7T1PLiX.png"},
+{q:"Hewan tercepat di darat?",a:["Cheetah","Kuda","Singa"],k:"Cheetah",img:"https://i.imgur.com/y6k5k1p.png"},
+{q:"Hewan beracun dari laut?",a:["Ubur-ubur","Ikan Mas","Paus"],k:"Ubur-ubur",img:"https://i.imgur.com/6n8Xj4Y.png"}
+]
 };
 
 function mulai(){
-  pemain=document.getElementById("nama").value;
-  if(!pemain) return alert("Isi nama dulu!");
-  document.getElementById("halNama").classList.add("hidden");
-  document.getElementById("halLevel").classList.remove("hidden");
-  musik.play();
+  nama=namaInput.value||"Detektif Cilik";
+  halNama.classList.add("hidden");
+  halMenu.classList.remove("hidden");
+  halo.innerText="Halo, "+nama+" 👋";
 }
 
-let soalAcak=[];
+function toggleMusik(){
+  musik=!musik;
+  musik?bgm.play():bgm.pause();
+}
+
 function setLevel(lv){
   level=lv;
-  skor=0; nyawa=3; index=0;
-  soalAcak=[...bank[lv]].sort(()=>Math.random()-0.5);
-  document.getElementById("halLevel").classList.add("hidden");
-  document.getElementById("halGame").classList.remove("hidden");
-  document.getElementById("judulLevel").innerText="Level "+lv.toUpperCase();
-  tampil();
+  data=[...bank[lv]].sort(()=>Math.random()-0.5);
+  index=0; skor=0; nyawa=3;
+  halMenu.classList.add("hidden");
+  halGame.classList.remove("hidden");
+  judulLevel.innerText="Level: "+lv.toUpperCase();
+  tampilSoal();
 }
 
-function tampil(){
-  clearInterval(timer);
-  document.getElementById("timer").innerText="";
-  document.getElementById("nyawa").innerText="❤️".repeat(nyawa);
-
-  if(index>=5 || nyawa<=0){ return hasil(); }
-
-  const s=soalAcak[index];
-  document.getElementById("soal").innerText=`Soal ${index+1}/5\n${s.q}`;
-  const j=document.getElementById("jawaban");
-  j.innerHTML="";
-  s.a.sort(()=>Math.random()-0.5).forEach(x=>{
+function tampilSoal(){
+  clearInterval(timerInt);
+  nyawa.innerText="❤️".repeat(nyawa);
+  timer.innerText="";
+  if(index>=5||nyawa<=0)return hasil();
+  const s=data[index];
+  gambar.src=s.img;
+  soal.innerText=s.q;
+  jawaban.innerHTML="";
+  s.a.sort(()=>Math.random()-0.5).forEach(j=>{
     let b=document.createElement("button");
-    b.innerText=x;
-    b.onclick=()=>cek(x,s.k);
-    j.appendChild(b);
+    b.innerText=j;
+    b.onclick=()=>cek(j,s.k);
+    jawaban.appendChild(b);
   });
-
   if(level==="sulit"){
     waktu=10;
-    timer=setInterval(()=>{
-      document.getElementById("timer").innerText="⏱ "+waktu;
+    timerInt=setInterval(()=>{
+      timer.innerText="⏱ "+waktu+" detik";
       waktu--;
-      if(waktu<0){
-        document.getElementById("salah").play();
-        nyawa--; index++; tampil();
-      }
+      if(waktu<0){salah.play();nyawa--;index++;tampilSoal();}
     },1000);
   }
 }
 
 function cek(j,k){
-  clearInterval(timer);
-  if(j===k){
-    skor+=20;
-    document.getElementById("benar").play();
-  }else{
-    nyawa--;
-    document.getElementById("salah").play();
-  }
-  index++;
-  setTimeout(tampil,500);
+  clearInterval(timerInt);
+  if(j===k){benar.play();skor+=20;}
+  else{salah.play();nyawa--;}
+  index++; tampilSoal();
 }
 
 function hasil(){
-  musik.pause();
-  document.getElementById("halGame").classList.add("hidden");
-  document.getElementById("halHasil").classList.remove("hidden");
-  document.getElementById("hasilNama").innerText="Detektif: "+pemain;
-  document.getElementById("hasilSkor").innerText="Skor: "+skor;
-  let b=skor>=80?"⭐⭐⭐":skor>=40?"⭐⭐":"⭐";
-  document.getElementById("hasilBintang").innerText="Bintang: "+b;
+  halGame.classList.add("hidden");
+  halHasil.classList.remove("hidden");
+  hasilNama.innerText=nama;
+  hasilSkor.innerText="Skor: "+skor;
+  let star=skor>=80?3:skor>=50?2:1;
+  bintang.innerHTML="⭐".repeat(star);
 }
 </script>
-
 </body>
 </html>
+
